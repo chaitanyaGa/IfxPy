@@ -8,7 +8,6 @@ import zipfile
 import shutil
 import glob
 import platform
-import subprocess
 
 if sys.version_info >= (3, ):
     from urllib import request
@@ -175,38 +174,6 @@ if('win32' in sys.platform):
         define_macros=definitions,
         library_dirs = [ py_home + '\libs', csdk_home + '\lib'],
         sources = ['ifxpyc.c'])
-    #use bin/onisilib.exe to detect the target for libisi and create the link delete the onisilib.exe
-    if os.path.exists(csdk_home + '\bin\onisilib.exe'):
-        #1.delete Exiting libisi.so.2
-        process = subprocess.Popen(['del', csdk_home + 'lib/libisi.so.2'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        out = stdout.decode(sys.stdout.encoding)
-        err = stderr.decode(sys.stdout.encoding)
-        sys.stdout.write(out + err)
-        #2. using onisilib binary find suitable target on given platform
-        args = [csdk_home + 'bin\onisilib.exe',  "OpenSSL", "-i ", csdk_home + 'lib']
-        popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-        popen.wait()
-        stdout,stderr=popen.communicate()
-        target = stdout.decode(sys.stdout.encoding).strip()
-        err = stderr.decode(sys.stdout.encoding)
-        sys.stdout.write(err + target)
-        link=csdk_home + 'lib/' + 'libisi.so.2'
-        source=csdk_home + 'lib/' + target
-        sys.stdout.write(source+"\n")
-	#3. if Target is identified on Machine then create link
-        if(os.path.exists(source)):
-       	    process = subprocess.Popen(['copy', source, link ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            process.wait()
-            stdout, stderr = process.communicate()
-            out = stdout.decode(sys.stdout.encoding)
-            err = stderr.decode(sys.stdout.encoding)
-            sys.stdout.write(out + err)
-        else:
-            sys.stdout.write("compatible openssl libraries not found")
-        #To do delete the onisilib.exe after its use
-    else:
-         sys.stdout.write("onisilib not present, hence can't determin Target library for libisi, default target for libisi will be used")
 else:
     IfxPyNative_ext_modules = Extension('IfxPy',
         include_dirs = [ py_home,  py_home + '/Include', csdk_home +'/incl/cli'],
@@ -214,36 +181,6 @@ else:
         define_macros=definitions,
         library_dirs = [ csdk_home + '/lib/cli', py_home + '/Lib'],
         sources = ['ifxpyc.c'])
-    #use bin/onisilib to detect the target for libisi and create the link delete the onisilib
-    if os.path.exists(csdk_home + '/bin/onisilib'):
-        process = subprocess.Popen(['rm', csdk_home + 'lib/libisi.so.2'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        out = stdout.decode(sys.stdout.encoding)
-        err = stderr.decode(sys.stdout.encoding)
-        sys.stdout.write(out + err)
-        args = [csdk_home + 'bin/onisilib', "OpenSSL",  "-i", csdk_home + 'lib/']
-        popen = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        popen.wait()
-        stdout,stderr=popen.communicate()
-        #output = popen.stdout.read()
-        target = stdout.decode(sys.stdout.encoding).strip()
-        err = stderr.decode(sys.stdout.encoding)
-        #sys.stdout.write(err + target)
-        link=csdk_home + 'lib/' + 'libisi.so.2'
-        source=csdk_home + 'lib/' + target
-        sys.stdout.write(source+"\n")
-        if(os.path.exists(source)):
-       	    process = subprocess.Popen(['ln', '-s', source, link ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            process.wait()
-            stdout, stderr = process.communicate()
-            out = stdout.decode(sys.stdout.encoding)
-            err = stderr.decode(sys.stdout.encoding)
-            sys.stdout.write(out + err)
-        else:
-            sys.stdout.write("compatible openssl libraries not found")
-        #To do delete the onisilib.exe after its use
-    else:
-        sys.stdout.write("onisilib not present, hence  can't determin Target library for libisi, default target will be used")
 
 
 # Supporting both Python 2 and Python 3 with Setuptools
